@@ -1,28 +1,35 @@
-import { NextRequest, NextResponse } from "next/server";
-import db from "@/lib/db";
+import { NextResponse } from "next/server";
+import clientPromise from "@/lib/mongodb";
 
 export async function GET() {
   try {
-    const row = db.prepare("SELECT value FROM settings WHERE key = ?").get("puzzleActive");
-    const puzzleActive = row?.value === "true";
-    return NextResponse.json({ puzzleActive });
-  } catch (error) {
-    console.error("Error fetching puzzle status:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    const client = await clientPromise;
+    const db = client.db("puzzleDB"); // change db name if needed
+    const settings = await db.collection("settings").findOne({ key: "puzzleActive" });
+
+    return NextResponse.json({ puzzleActive: settings?.value ?? false });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ puzzleActive: false });
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const { active } = await req.json();
-    if (typeof active !== "boolean") {
-      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
-    }
 
-    db.prepare("UPDATE settings SET value = ? WHERE key = ?").run(active.toString(), "puzzleActive");
+    const client = await clientPromise;
+    const db = client.db("puzzleDB");
+
+    await db.collection("settings").updateOne(
+      { key: "puzzleActive" },
+      { $set: { value: active } },
+      { upsert: true }
+    );
+
     return NextResponse.json({ success: true, puzzleActive: active });
-  } catch (error) {
-    console.error("Error updating puzzle status:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ success: false, error: "Failed to update" }, { status: 500 });
   }
 }

@@ -11,7 +11,7 @@ export default function AdminPanel() {
   };
 
   const resetAll = async () => {
-    await fetch("/api/admin/reset", { method: "POST" });
+    await fetch("/api/admin/reset-all", { method: "POST" });
     fetchUsers();
   };
 
@@ -40,8 +40,8 @@ export default function AdminPanel() {
             <tr key={i} className="border-b">
               <td className="p-2 border">{u.name}</td>
               <td className="p-2 border">
-                {u.completed_at
-                  ? new Date(u.completed_at).toLocaleTimeString()
+                {u.completedAt
+                  ? new Date(u.completedAt).toLocaleString()
                   : "-"}
               </td>
             </tr>

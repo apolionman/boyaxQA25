@@ -1,27 +1,45 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import db from "@/lib/db";
+import clientPromise from "@/lib/mongodb";
 
 export async function POST(req: NextRequest) {
-  const { name, answer } = await req.json();
-  const now = Date.now();
+  try {
+    const { name, answer } = await req.json();
+    const now = Date.now();
 
-  const existing = db.prepare("SELECT * FROM answers WHERE name = ?").get(name);
+    if (!name || !answer) {
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    }
 
-  if (existing && existing.answered) {
-    return NextResponse.json({ error: "Already answered" }, { status: 400 });
+    const client = await clientPromise;
+    const db = client.db("puzzleDB"); // change if needed
+    const answersCollection = db.collection("answers");
+
+    // Check if already exists
+    const existing = await answersCollection.findOne({ name });
+
+    if (existing && existing.answered) {
+      return NextResponse.json({ error: "Already answered" }, { status: 400 });
+    }
+
+    if (existing) {
+      await answersCollection.updateOne(
+        { name },
+        { $set: { answer, answered: true, createdAt: now } }
+      );
+    } else {
+      await answersCollection.insertOne({
+        name,
+        answer,
+        answered: true,
+        createdAt: now,
+      });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Error in POST /answers:", err);
+    return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
   }
-
-  if (existing) {
-    db.prepare(
-      "UPDATE answers SET answer = ?, answered = 1, created_at = ? WHERE name = ?"
-    ).run(answer, now, name);
-  } else {
-    db.prepare(
-      "INSERT INTO answers (name, answer, answered, created_at) VALUES (?, ?, 1, ?)"
-    ).run(name, answer, now);
-  }
-
-  return NextResponse.json({ success: true });
 }

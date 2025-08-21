@@ -84,9 +84,9 @@ export default function AdminPage() {
         <tbody>
         {users.map((u, i) => {
             let diffFormatted = "-";
-            if (u.created_at) {
+            if (u.completedAt) {
               const now = Date.now();
-              let diff = now - u.created_at; // milliseconds
+              let diff = now - u.completedAt; // milliseconds
 
               const minutes = Math.floor(diff / 60000);
               const seconds = Math.floor((diff % 60000) / 1000);
@@ -100,7 +100,12 @@ export default function AdminPage() {
               <tr key={i} className="border-b">
                 <td className="p-2 border">{u.name}</td>
                 <td className="p-2 border">{u.answer || "-"}</td>
-                <td className="p-2 border text-center">{diffFormatted}</td>
+                <td className="p-2 border">
+                  {u.completedAt
+                    ? new Date(u.completedAt).toLocaleString()
+                    : "-"}
+                </td>
+
                 <td className="p-2 border">
                   <button
                     onClick={() => resetUser(u.name)}
