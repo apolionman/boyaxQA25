@@ -101,8 +101,8 @@ export default function AdminPage() {
                 <td className="p-2 border">{u.name}</td>
                 <td className="p-2 border">{u.answer || "-"}</td>
                 <td className="p-2 border">
-                  {u.completedAt
-                    ? new Date(u.completedAt).toLocaleString()
+                  {u.createdAt
+                    ? new Date(u.createdAt).toLocaleString()
                     : "-"}
                 </td>
 
