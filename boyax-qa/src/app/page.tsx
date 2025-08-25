@@ -82,7 +82,7 @@ export default function HomePage() {
                 onClick={() => handleChoice("/answer")}
                 className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
               >
-                QA / Answer
+                Question / Answer
               </button>
               <button
                 onClick={() => handleChoice("/puzzle")}
